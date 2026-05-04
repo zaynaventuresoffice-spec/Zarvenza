@@ -5,31 +5,39 @@ import { api } from '../api';
 import './Orders.css';
 
 const STATUS_COLOR = {
-  pending:    '#b8860b',
-  confirmed:  '#2e7d52',
-  processing: '#1a5276',
-  shipped:    '#6c3483',
-  delivered:  '#2e7d52',
-  cancelled:  '#922b21',
+  awaiting_payment: '#b8860b',
+  pending:          '#b8860b',
+  confirmed:        '#2e7d52',
+  processing:       '#1a5276',
+  shipped:          '#6c3483',
+  delivered:        '#2e7d52',
+  payment_failed:   '#922b21',
+  cancelled:        '#922b21',
 };
 
 const STATUS_LABEL = {
-  pending:    'Pending',
-  confirmed:  'Confirmed',
-  processing: 'Processing',
-  shipped:    'Shipped',
-  delivered:  'Delivered',
-  cancelled:  'Cancelled',
+  awaiting_payment: 'Awaiting Payment',
+  pending:          'Pending',
+  confirmed:        'Confirmed',
+  processing:       'Processing',
+  shipped:          'Shipped',
+  delivered:        'Delivered',
+  payment_failed:   'Payment Failed',
+  cancelled:        'Cancelled',
 };
 
 export default function Orders() {
-  const [orders, setOrders] = useState([]);
+  const [orders,  setOrders]  = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error,   setError]   = useState('');
 
   useEffect(() => {
     api.getOrders()
-      .then(setOrders)
+      .then(rows => setOrders(rows.map(o => ({
+        ...o,
+        // pg returns NUMERIC as strings — parse to float for display
+        total: parseFloat(o.total) || 0,
+      }))))
       .catch(e => setError(e.message))
       .finally(() => setLoading(false));
   }, []);
@@ -78,7 +86,7 @@ export default function Orders() {
                     <p className="order-card__meta">
                       <Clock size={11} />
                       {new Date(order.created_at).toLocaleDateString('en-IN', {
-                        year: 'numeric', month: 'short', day: 'numeric'
+                        year: 'numeric', month: 'short', day: 'numeric',
                       })}
                       <span className="dot">·</span>
                       {order.item_count} item{order.item_count !== 1 ? 's' : ''}
@@ -88,9 +96,9 @@ export default function Orders() {
                 <div className="order-card__right">
                   <span
                     className="order-status-badge"
-                    style={{ '--status-color': STATUS_COLOR[order.status] }}
+                    style={{ '--status-color': STATUS_COLOR[order.status] ?? '#888' }}
                   >
-                    {STATUS_LABEL[order.status] || order.status}
+                    {STATUS_LABEL[order.status] ?? order.status}
                   </span>
                   <p className="order-card__total">₹{order.total.toFixed(2)}</p>
                   <ChevronRight size={16} className="order-card__arrow" />

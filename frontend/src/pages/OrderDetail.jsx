@@ -5,26 +5,43 @@ import { api } from '../api';
 import './Orders.css';
 
 const TRACK_STEPS = [
-  { key: 'awaiting_payment', label: 'Payment',     Icon: Clock },
-  { key: 'confirmed',        label: 'Confirmed',   Icon: CheckCircle },
-  { key: 'processing',       label: 'Processing',  Icon: Package },
-  { key: 'shipped',          label: 'Shipped',     Icon: Truck },
-  { key: 'delivered',        label: 'Delivered',   Icon: Home },
+  { key: 'awaiting_payment', label: 'Payment',    Icon: Clock },
+  { key: 'confirmed',        label: 'Confirmed',  Icon: CheckCircle },
+  { key: 'processing',       label: 'Processing', Icon: Package },
+  { key: 'shipped',          label: 'Shipped',    Icon: Truck },
+  { key: 'delivered',        label: 'Delivered',  Icon: Home },
 ];
 
 const STEP_ORDER = ['awaiting_payment', 'confirmed', 'processing', 'shipped', 'delivered'];
 
+// PostgreSQL returns NUMERIC columns as strings — parse them all to float
+function parseOrder(order) {
+  if (!order) return order;
+  return {
+    ...order,
+    subtotal: parseFloat(order.subtotal) || 0,
+    shipping: parseFloat(order.shipping) || 0,
+    total:    parseFloat(order.total)    || 0,
+    items: (order.items || []).map(item => ({
+      ...item,
+      price: parseFloat(item.price) || 0,
+      qty:   parseInt(item.qty, 10) || 0,
+    })),
+  };
+}
+
 export default function OrderDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [order, setOrder] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [order,      setOrder]      = useState(null);
+  const [loading,    setLoading]    = useState(true);
+  const [error,      setError]      = useState('');
   const [cancelling, setCancelling] = useState(false);
 
   const fetchOrder = () => {
+    setLoading(true);
     api.getOrder(id)
-      .then(setOrder)
+      .then(data => setOrder(parseOrder(data)))
       .catch(e => setError(e.message))
       .finally(() => setLoading(false));
   };
@@ -44,6 +61,7 @@ export default function OrderDetail() {
     }
   };
 
+  // ── Loading ───────────────────────────────────────────────────
   if (loading) return (
     <main className="orders-page page-enter" style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ textAlign: 'center' }}>
@@ -53,6 +71,7 @@ export default function OrderDetail() {
     </main>
   );
 
+  // ── Error ─────────────────────────────────────────────────────
   if (error) return (
     <main className="orders-page page-enter">
       <div className="container" style={{ padding: '120px 0 60px', textAlign: 'center' }}>
@@ -65,7 +84,7 @@ export default function OrderDetail() {
     </main>
   );
 
-  const currentStepIndex = order.status === 'cancelled'
+  const currentStepIndex = order.status === 'cancelled' || order.status === 'payment_failed'
     ? -1
     : STEP_ORDER.indexOf(order.status);
 
@@ -82,21 +101,32 @@ export default function OrderDetail() {
       </div>
 
       <div className="order-detail-body container">
-        {/* Back link */}
         <button className="order-back-btn" onClick={() => navigate('/orders')}>
           <ArrowLeft size={15} /> Back to orders
         </button>
 
-        {/* ── Tracking timeline ───────────────────── */}
-        {order.status !== 'cancelled' ? (
+        {/* ── Tracking timeline ──────────────────────── */}
+        {order.status === 'cancelled' || order.status === 'payment_failed' ? (
+          <div className="order-cancelled-banner">
+            <XCircle size={20} />
+            <span>
+              {order.status === 'payment_failed'
+                ? 'Payment failed for this order.'
+                : 'This order was cancelled.'}
+            </span>
+          </div>
+        ) : (
           <div className="order-track-card">
             <h2 className="order-section-title">Track Your Order</h2>
             <div className="track-timeline">
               {TRACK_STEPS.map((step, i) => {
-                const done = i <= currentStepIndex;
+                const done   = i <= currentStepIndex;
                 const active = i === currentStepIndex;
                 return (
-                  <div key={step.key} className={`track-step ${done ? 'track-step--done' : ''} ${active ? 'track-step--active' : ''}`}>
+                  <div
+                    key={step.key}
+                    className={`track-step ${done ? 'track-step--done' : ''} ${active ? 'track-step--active' : ''}`}
+                  >
                     <div className="track-step__dot">
                       <step.Icon size={14} />
                     </div>
@@ -107,14 +137,9 @@ export default function OrderDetail() {
               })}
             </div>
           </div>
-        ) : (
-          <div className="order-cancelled-banner">
-            <XCircle size={20} />
-            <span>This order was cancelled.</span>
-          </div>
         )}
 
-        {/* ── Tracking history ────────────────────── */}
+        {/* ── Status history ──────────────────────────── */}
         {order.tracking?.length > 0 && (
           <div className="order-section-card">
             <h2 className="order-section-title">Status History</h2>
@@ -134,7 +159,7 @@ export default function OrderDetail() {
           </div>
         )}
 
-        {/* ── Order items ─────────────────────────── */}
+        {/* ── Items ──────────────────────────────────── */}
         <div className="order-section-card">
           <h2 className="order-section-title">Items Ordered</h2>
           <div className="order-items-list">
@@ -168,17 +193,22 @@ export default function OrderDetail() {
           </div>
         </div>
 
-        {/* ── Payment & delivery info ─────────────── */}
+        {/* ── Payment + Address ───────────────────────── */}
         <div className="order-meta-grid">
           <div className="order-section-card">
             <h2 className="order-section-title">Payment</h2>
             <p className="order-meta-value">Method: {order.payment_method?.toUpperCase()}</p>
             <p className="order-meta-value">
-              Status: <span className={order.payment_status === 'paid' ? 'text-green' : 'text-amber'}>
+              Status:{' '}
+              <span className={order.payment_status === 'paid' ? 'text-green' : 'text-amber'}>
                 {order.payment_status === 'paid' ? '✓ Paid' : 'Pending'}
               </span>
             </p>
-            {order.upi_ref && <p className="order-meta-value">Ref: {order.upi_ref}</p>}
+            {order.razorpay_payment_id && (
+              <p className="order-meta-value" style={{ fontSize: '0.72rem', wordBreak: 'break-all' }}>
+                Ref: {order.razorpay_payment_id}
+              </p>
+            )}
           </div>
 
           <div className="order-section-card">
@@ -187,12 +217,12 @@ export default function OrderDetail() {
           </div>
         </div>
 
-        {/* ── Actions ─────────────────────────────── */}
+        {/* ── Actions ────────────────────────────────── */}
         <div className="order-actions">
           <Link to="/orders" className="order-action-btn order-action-btn--secondary">
             <ArrowLeft size={15} /> All Orders
           </Link>
-          {['pending', 'confirmed'].includes(order.status) && (
+          {['awaiting_payment', 'confirmed'].includes(order.status) && (
             <button
               className="order-action-btn order-action-btn--cancel"
               onClick={handleCancel}

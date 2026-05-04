@@ -1,16 +1,14 @@
 import { Router } from 'express';
 import crypto from 'crypto';
 import Razorpay from 'razorpay';
-import db from '../db.js';
+import pool, { db } from '../db.js';
 import { requireAuth } from '../middleware/auth.js';
-import dotenv from 'dotenv';
-dotenv.config();
 
 const router = Router();
 
 const razorpay = new Razorpay({
-  key_id:     process.env.RAZORPAY_KEY_ID     || 'rzp_test_XXXXXXXXXXXXXXXX',
-  key_secret: process.env.RAZORPAY_KEY_SECRET || 'XXXXXXXXXXXXXXXXXXXXXXXX',
+  key_id:     process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
 function genOrderNumber() {
@@ -19,147 +17,171 @@ function genOrderNumber() {
   return `ZRV-${ts}-${rand}`;
 }
 
-const STATUS_MESSAGES = {
-  pending:    'Your order has been placed and is awaiting payment.',
-  confirmed:  'Payment received! Your order is confirmed and being prepared.',
-  processing: 'Our team is carefully packaging your luxury items.',
-  shipped:    'Your order is on its way! You will receive tracking details soon.',
-  delivered:  'Your order has been delivered. Enjoy your Zarvenza experience!',
-  cancelled:  'Your order has been cancelled. Refunds process within 5–7 business days.',
+const MSG = {
+  awaiting: 'Razorpay payment session created. Waiting for payment confirmation.',
+  confirmed: 'Payment received! Your order is confirmed and being prepared.',
 };
 
+// ── POST /api/payment/create-razorpay-order ──────────────────────
 router.post('/create-razorpay-order', requireAuth, async (req, res) => {
-  const { items, address, subtotal, shipping, total, notes } = req.body;
+  const { items, address, subtotal, shipping, total } = req.body;
 
-  if (!items?.length)  return res.status(400).json({ error: 'Cart is empty' });
-  if (!address?.line1) return res.status(400).json({ error: 'Delivery address is required' });
+  if (!items?.length)       return res.status(400).json({ error: 'Cart is empty' });
+  if (!address?.line1)      return res.status(400).json({ error: 'Delivery address is required' });
   if (!total || total <= 0) return res.status(400).json({ error: 'Invalid order total' });
 
   const amountPaise = Math.round(total * 100);
 
   try {
+    // 1. Create Razorpay order
     const rzpOrder = await razorpay.orders.create({
       amount:   amountPaise,
       currency: 'INR',
       receipt:  `rcpt_${Date.now()}`,
-      notes: {
-        customer_name:  req.user.name,
-        customer_email: req.user.email,
-      },
+      notes:    { customer_name: req.user.name, customer_email: req.user.email },
     });
 
+    // 2. Save pending order in Postgres — use transaction so items + tracking are atomic
     const orderNumber = genOrderNumber();
-    const addrLine = [address.line1, address.line2, address.city, address.state, address.zip, address.country]
+    const addrLine    = [address.line1, address.line2, address.city, address.state, address.zip, address.country]
       .filter(Boolean).join(', ');
 
-    const insertOrder = db.prepare(`
-      INSERT INTO orders
-        (order_number, user_id, subtotal, shipping, total,
-         status, payment_method, payment_status, razorpay_order_id, notes)
-      VALUES (?, ?, ?, ?, ?, 'awaiting_payment', 'razorpay', 'pending', ?, ?)
-    `);
+    const client = await pool.connect();
+    let orderId;
 
-    const { lastInsertRowid: orderId } = insertOrder.run(
-      orderNumber, req.user.id, subtotal, shipping, total,
-      rzpOrder.id, addrLine
-    );
+    try {
+      await client.query('BEGIN');
 
-    const insertItem = db.prepare(`
-      INSERT INTO order_items (order_id, product_id, name, price, qty, image_url)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `);
-    for (const item of items) {
-      insertItem.run(orderId, item.id, item.name, item.price, item.qty, item.images?.[0] ?? null);
+      const { rows: orderRows } = await client.query(
+        `INSERT INTO orders
+           (order_number, user_id, subtotal, shipping, total,
+            status, payment_method, payment_status, razorpay_order_id, notes)
+         VALUES ($1,$2,$3,$4,$5,'awaiting_payment','razorpay','pending',$6,$7)
+         RETURNING id`,
+        [orderNumber, req.user.id, subtotal, shipping, total, rzpOrder.id, addrLine]
+      );
+      orderId = orderRows[0].id;
+
+      for (const item of items) {
+        await client.query(
+          `INSERT INTO order_items (order_id, product_id, name, price, qty, image_url)
+           VALUES ($1,$2,$3,$4,$5,$6)`,
+          [orderId, item.id, item.name, item.price, item.qty, item.images?.[0] ?? null]
+        );
+      }
+
+      await client.query(
+        `INSERT INTO order_tracking (order_id, status, message) VALUES ($1,'awaiting_payment',$2)`,
+        [orderId, MSG.awaiting]
+      );
+
+      await client.query('COMMIT');
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
     }
 
-    db.prepare(`
-      INSERT INTO order_tracking (order_id, status, message) VALUES (?, 'awaiting_payment', ?)
-    `).run(orderId, 'Razorpay payment session created. Waiting for payment confirmation.');
-
+    // 3. Return everything the frontend Razorpay modal needs
     res.status(201).json({
       razorpayOrderId: rzpOrder.id,
-      orderId,          
+      orderId,
       orderNumber,
-      amount:           amountPaise,
-      currency:         'INR',
-      keyId:            process.env.RAZORPAY_KEY_ID || 'rzp_test_XXXXXXXXXXXXXXXX',
+      amount:   amountPaise,
+      currency: 'INR',
+      keyId:    process.env.RAZORPAY_KEY_ID,
     });
 
   } catch (err) {
-    console.error('[Razorpay] create-order error:', err);
+    console.error('[Razorpay] create-order error:', err.message);
     res.status(502).json({ error: 'Could not initiate payment. Please try again.' });
   }
 });
 
-
-router.post('/verify', requireAuth, (req, res) => {
+// ── POST /api/payment/verify ─────────────────────────────────────
+router.post('/verify', requireAuth, async (req, res) => {
   const { razorpayOrderId, razorpayPaymentId, razorpaySignature, orderId } = req.body;
 
-  if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature || !orderId) {
+  if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature || !orderId)
     return res.status(400).json({ error: 'Missing payment verification fields' });
-  }
 
-
-  const secret = process.env.RAZORPAY_KEY_SECRET || 'XXXXXXXXXXXXXXXXXXXXXXXX';
+  // Signature verification — Razorpay signs: HMAC(order_id|payment_id, key_secret)
   const expectedSig = crypto
-    .createHmac('sha256', secret)
+    .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
     .update(`${razorpayOrderId}|${razorpayPaymentId}`)
     .digest('hex');
 
   if (expectedSig !== razorpaySignature) {
-    console.warn('[Razorpay] Signature mismatch for order', orderId);
+    console.warn('[Razorpay] Signature mismatch for orderId', orderId);
     return res.status(400).json({ error: 'Payment verification failed. Signature mismatch.' });
   }
 
-  const order = db.prepare(`
-    SELECT * FROM orders WHERE id = ? AND user_id = ? AND razorpay_order_id = ?
-  `).get(orderId, req.user.id, razorpayOrderId);
+  try {
+    const { rows } = await db.query(
+      `SELECT * FROM orders WHERE id = $1 AND user_id = $2 AND razorpay_order_id = $3`,
+      [orderId, req.user.id, razorpayOrderId]
+    );
+    if (!rows.length)
+      return res.status(404).json({ error: 'Order not found or does not belong to you' });
 
-  if (!order) {
-    return res.status(404).json({ error: 'Order not found or does not belong to you' });
+    const order = rows[0];
+
+    // Idempotent — already confirmed (e.g. webhook fired first)
+    if (order.payment_status === 'paid')
+      return res.json({ success: true, orderNumber: order.order_number, orderId: order.id });
+
+    // Atomic update
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      await client.query(
+        `UPDATE orders
+         SET payment_status      = 'paid',
+             status              = 'confirmed',
+             razorpay_payment_id = $1,
+             razorpay_signature  = $2,
+             updated_at          = NOW()
+         WHERE id = $3`,
+        [razorpayPaymentId, razorpaySignature, order.id]
+      );
+
+      await client.query(
+        `INSERT INTO order_tracking (order_id, status, message) VALUES ($1,'confirmed',$2)`,
+        [order.id, MSG.confirmed]
+      );
+
+      await client.query('COMMIT');
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
+
+    console.log(`[Order] ✅ Confirmed — ${order.order_number} | Razorpay: ${razorpayPaymentId}`);
+    res.json({ success: true, orderNumber: order.order_number, orderId: order.id });
+
+  } catch (err) {
+    console.error('[Razorpay] verify error:', err.message);
+    res.status(500).json({ error: 'Verification failed. Please contact support.' });
   }
-
-  if (order.payment_status === 'paid') {
-    return res.json({ success: true, orderNumber: order.order_number, alreadyConfirmed: true });
-  }
-
-  db.transaction(() => {
-    db.prepare(`
-      UPDATE orders
-      SET payment_status      = 'paid',
-          status              = 'confirmed',
-          razorpay_payment_id = ?,
-          razorpay_signature  = ?,
-          updated_at          = datetime('now')
-      WHERE id = ?
-    `).run(razorpayPaymentId, razorpaySignature, order.id);
-
-    db.prepare(`
-      INSERT INTO order_tracking (order_id, status, message) VALUES (?, 'confirmed', ?)
-    `).run(order.id, STATUS_MESSAGES.confirmed);
-  })();
-
-  console.log(`[Order] ✅ Confirmed — ${order.order_number} | Razorpay: ${razorpayPaymentId}`);
-
-  res.json({
-    success:     true,
-    orderNumber: order.order_number,
-    orderId:     order.id,
-  });
 });
 
-router.post('/webhook', (req, res) => {
+// ── POST /api/payment/webhook ────────────────────────────────────
+router.post('/webhook', async (req, res) => {
   const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET || '';
 
   if (webhookSecret) {
     const receivedSig = req.headers['x-razorpay-signature'];
     const expectedSig = crypto
       .createHmac('sha256', webhookSecret)
-      .update(req.body) 
+      .update(req.body)   // raw Buffer — registered with express.raw() in server.js
       .digest('hex');
 
     if (receivedSig !== expectedSig) {
-      console.warn('[Webhook] Signature mismatch — ignoring');
+      console.warn('[Webhook] Signature mismatch');
       return res.status(400).json({ error: 'Invalid webhook signature' });
     }
   }
@@ -168,58 +190,56 @@ router.post('/webhook', (req, res) => {
   try {
     event = JSON.parse(req.body.toString());
   } catch {
-    return res.status(400).json({ error: 'Invalid JSON' });
+    return res.status(400).json({ error: 'Invalid JSON body' });
   }
 
   console.log(`[Webhook] Event: ${event.event}`);
 
   if (event.event === 'payment.captured') {
-    const payment  = event.payload.payment.entity;
-    const rzpOrdId = payment.order_id;
-    const rzpPayId = payment.id;
+    const { order_id: rzpOrdId, id: rzpPayId } = event.payload.payment.entity;
+    try {
+      const { rows } = await db.query(
+        `SELECT * FROM orders WHERE razorpay_order_id = $1`, [rzpOrdId]
+      );
+      if (!rows.length) return res.json({ received: true });
 
-    const order = db.prepare(`
-      SELECT * FROM orders WHERE razorpay_order_id = ?
-    `).get(rzpOrdId);
-
-    if (!order) {
-      console.warn('[Webhook] No order found for razorpay_order_id:', rzpOrdId);
-      return res.json({ received: true }); 
-    }
-
-    if (order.payment_status !== 'paid') {
-      db.transaction(() => {
-        db.prepare(`
-          UPDATE orders
-          SET payment_status      = 'paid',
-              status              = 'confirmed',
-              razorpay_payment_id = ?,
-              updated_at          = datetime('now')
-          WHERE id = ?
-        `).run(rzpPayId, order.id);
-
-        db.prepare(`
-          INSERT INTO order_tracking (order_id, status, message) VALUES (?, 'confirmed', ?)
-        `).run(order.id, STATUS_MESSAGES.confirmed);
-      })();
-
-      console.log(`[Webhook] ✅ Order ${order.order_number} confirmed via webhook`);
+      const order = rows[0];
+      if (order.payment_status !== 'paid') {
+        await db.query(
+          `UPDATE orders SET payment_status='paid', status='confirmed',
+           razorpay_payment_id=$1, updated_at=NOW() WHERE id=$2`,
+          [rzpPayId, order.id]
+        );
+        await db.query(
+          `INSERT INTO order_tracking (order_id, status, message) VALUES ($1,'confirmed',$2)`,
+          [order.id, MSG.confirmed]
+        );
+        console.log(`[Webhook] ✅ Order ${order.order_number} confirmed`);
+      }
+    } catch (err) {
+      console.error('[Webhook] payment.captured error:', err.message);
     }
   }
 
   if (event.event === 'payment.failed') {
-    const payment  = event.payload.payment.entity;
-    const rzpOrdId = payment.order_id;
-
-    const order = db.prepare(`SELECT * FROM orders WHERE razorpay_order_id = ?`).get(rzpOrdId);
-    if (order && order.payment_status === 'pending') {
-      db.prepare(`
-        UPDATE orders SET status = 'payment_failed', updated_at = datetime('now') WHERE id = ?
-      `).run(order.id);
-      db.prepare(`
-        INSERT INTO order_tracking (order_id, status, message) VALUES (?, 'payment_failed', ?)
-      `).run(order.id, `Payment failed: ${payment.error_description || 'Unknown error'}`);
-      console.log(`[Webhook] ❌ Payment failed for order ${order.order_number}`);
+    const { order_id: rzpOrdId, error_description } = event.payload.payment.entity;
+    try {
+      const { rows } = await db.query(
+        `SELECT * FROM orders WHERE razorpay_order_id = $1`, [rzpOrdId]
+      );
+      if (rows.length && rows[0].payment_status === 'pending') {
+        const order = rows[0];
+        await db.query(
+          `UPDATE orders SET status='payment_failed', updated_at=NOW() WHERE id=$1`, [order.id]
+        );
+        await db.query(
+          `INSERT INTO order_tracking (order_id, status, message) VALUES ($1,'payment_failed',$2)`,
+          [order.id, `Payment failed: ${error_description || 'Unknown error'}`]
+        );
+        console.log(`[Webhook] ❌ Payment failed for order ${order.order_number}`);
+      }
+    } catch (err) {
+      console.error('[Webhook] payment.failed error:', err.message);
     }
   }
 
