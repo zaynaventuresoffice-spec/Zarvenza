@@ -50,7 +50,7 @@ export default function Orders() {
         </div>
         <div className="page-hero__content container">
           <p className="section-label">Your Account</p>
-          <h1 className="page-hero__title">My Orders</h1>
+          <h1 className="order-hero__title">My Orders</h1>
         </div>
       </div>
 

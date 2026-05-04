@@ -96,7 +96,7 @@ export default function OrderDetail() {
         </div>
         <div className="page-hero__content container">
           <p className="section-label">Order Details</p>
-          <h1 className="page-hero__title">{order.order_number}</h1>
+          <h1 className="order-hero__title">{order.order_number}</h1>
         </div>
       </div>
 

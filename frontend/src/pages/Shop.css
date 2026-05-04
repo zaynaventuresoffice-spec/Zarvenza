@@ -33,7 +33,15 @@
 
 .page-hero__title {
   font-size: clamp(2.5rem, 5vw, 4rem);
-  color: var(--cream);
+  color: var(--text-primary);
+  letter-spacing: 0.04em;
+  font-weight: 300;
+  margin-top: 10px;
+}
+
+.order-hero__title {
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  color: var(--text-primary);
   letter-spacing: 0.04em;
   font-weight: 300;
   margin-top: 10px;
