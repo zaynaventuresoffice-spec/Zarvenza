@@ -13,7 +13,7 @@ export default function Home() {
       <section className="hero">
         <div className="hero__bg">
           <img
-            src="https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=1600&q=85"
+            src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1600&q=85"
             alt="Luxury beauty"
           />
           <div className="hero__overlay" />
