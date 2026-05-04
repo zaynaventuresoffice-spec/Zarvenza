@@ -12,7 +12,7 @@ const PORT = process.env.PORT ;
 
 // ── CORS ─────────────────────────────────────────────────────────
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173', 'https://zarvenza.vercel.app'],
+  origin: ['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173', 'https://zarvenza-kq6dn9wyd-zaynaventuresoffice-specs-projects.vercel.app'],
   credentials: true,
 }));
 
