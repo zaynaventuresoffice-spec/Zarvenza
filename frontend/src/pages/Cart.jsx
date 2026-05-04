@@ -107,7 +107,7 @@ export default function Cart() {
             <div className="cart-summary__rows">
               <div className="cart-summary__row">
                 <span>Subtotal</span>
-                <span>${subtotal.toFixed(2)}</span>
+                <span>₹{subtotal.toFixed(2)}</span>
               </div>
               <div className="cart-summary__row">
                 <span>Shipping</span>
@@ -115,13 +115,13 @@ export default function Cart() {
               </div>
               {subtotal > 0 && subtotal < 150 && (
                 <p className="cart-shipping-note">
-                  Add ${(150 - subtotal).toFixed(2)} more for free shipping
+                  Add ₹{(150 - subtotal).toFixed(2)} more for free shipping
                 </p>
               )}
               <div className="cart-summary__divider" />
               <div className="cart-summary__row cart-summary__row--total">
                 <span>Total</span>
-                <span>${total.toFixed(2)}</span>
+                <span>₹{total.toFixed(2)}</span>
               </div>
             </div>
 
