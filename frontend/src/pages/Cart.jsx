@@ -60,7 +60,7 @@ export default function Cart() {
                   </div>
                 </div>
 
-                <div className="cart-item__price">${item.price.toFixed(2)}</div>
+                <div className="cart-item__price">₹{item.price.toFixed(2)}</div>
 
                 <div className="cart-item__qty">
                   <button
@@ -79,7 +79,7 @@ export default function Cart() {
                   </button>
                 </div>
 
-                <div className="cart-item__total">${(item.price * item.qty).toFixed(2)}</div>
+                <div className="cart-item__total">₹{(item.price * item.qty).toFixed(2)}</div>
 
                 <button
                   className="cart-item__remove"
@@ -111,7 +111,7 @@ export default function Cart() {
               </div>
               <div className="cart-summary__row">
                 <span>Shipping</span>
-                <span>{shipping === 0 ? <span className="cart-free">Free</span> : `$${shipping.toFixed(2)}`}</span>
+                <span>{shipping === 0 ? <span className="cart-free">Free</span> : `₹${shipping.toFixed(2)}`}</span>
               </div>
               {subtotal > 0 && subtotal < 150 && (
                 <p className="cart-shipping-note">
