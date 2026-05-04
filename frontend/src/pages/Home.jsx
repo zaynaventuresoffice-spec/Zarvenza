@@ -23,7 +23,7 @@ export default function Home() {
           <h1 className="hero__title">
             Beauty That<br /><em>Transcends</em>
           </h1>
-          <p className="hero__sub">Rare ingredients. Timeless rituals. Luxury redefined for the modern connoisseur.</p>
+          <p className="hero__sub">Crafted for elegance. Designed for confidence. Luxury redefined for the modern connoisseur.</p>
           <div className="hero__actions">
             <Link to="/shop" className="btn-primary"><span>Explore Collection</span><ArrowRight size={16} /></Link>
             <Link to="/about" className="btn-outline">Our Story</Link>
@@ -35,22 +35,34 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Pillars */}
+     {/* Pillars */}
       <section className="pillars">
         <div className="container pillars__inner">
-          {[
-            { icon: <Leaf size={22} />, title: "Pure Ingredients", desc: "Ethically sourced botanicals from the world's most prized regions." },
-            { icon: <Sparkles size={22} />, title: "Artisan Formulas", desc: "Developed alongside master perfumers and dermatologists in Paris." },
-            { icon: <Award size={22} />, title: "Certified Luxury", desc: "Every formula cruelty-free, vegan, and clinically validated." },
-          ].map((p, i) => (
-            <div className="pillar" key={i}>
-              <div className="pillar__icon">{p.icon}</div>
-              <h3 className="pillar__title">{p.title}</h3>
-              <p className="pillar__desc">{p.desc}</p>
-            </div>
-          ))}
+        {[
+        { 
+          icon: <Leaf size={22} />, 
+          title: "Premium Fabrics", 
+          desc: "Carefully selected materials that ensure comfort, durability, and a luxurious feel in every wear." 
+        },
+        { 
+          icon: <Sparkles size={22} />, 
+          title: "Trend-Driven Designs", 
+          desc: "Crafted with the latest fashion trends, blending modern style with timeless elegance." 
+        },
+        { 
+          icon: <Award size={22} />, 
+          title: "Quality Assured", 
+          desc: "Every piece is thoroughly inspected to deliver superior craftsmanship and long-lasting quality." 
+        },
+        ].map((p, i) => (
+        <div className="pillar" key={i}>
+          <div className="pillar__icon">{p.icon}</div>
+            <h3 className="pillar__title">{p.title}</h3>
+            <p className="pillar__desc">{p.desc}</p>
         </div>
-      </section>
+      ))}
+    </div>
+  </section>
 
       {/* Featured Products */}
       <section className="section container">
