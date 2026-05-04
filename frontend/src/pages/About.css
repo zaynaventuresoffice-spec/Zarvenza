@@ -1,0 +1,164 @@
+.about__intro { padding: 90px 0; }
+
+.about__intro-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: center;
+}
+
+.about__intro-text { display: flex; flex-direction: column; gap: 18px; }
+
+.about__intro-text p {
+  font-size: 0.9rem;
+  line-height: 1.85;
+  color: var(--text-secondary);
+}
+
+.about__heading {
+  font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+  letter-spacing: 0.02em;
+  margin-top: 10px;
+}
+
+.about__intro-img {
+  position: relative;
+}
+
+.about__intro-img img {
+  width: 100%;
+  aspect-ratio: 4/5;
+  object-fit: cover;
+  border: 1px solid var(--border);
+}
+
+.about__intro-img::before {
+  content: '';
+  position: absolute;
+  top: -16px; right: -16px;
+  width: 100%; height: 100%;
+  border: 1px solid var(--gold);
+  opacity: 0.3;
+  z-index: -1;
+}
+
+/* Values */
+.about__values {
+  background: var(--cream-dark);
+  padding: 90px 0;
+}
+
+.about__values-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 40px;
+}
+
+.about__value {
+  padding: 36px 28px;
+  background: var(--cream);
+  border: 1px solid var(--border);
+  transition: var(--transition);
+}
+
+.about__value:hover {
+  border-color: var(--gold);
+  box-shadow: var(--shadow);
+}
+
+.about__value-num {
+  display: block;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.5rem;
+  color: var(--gold);
+  opacity: 0.5;
+  line-height: 1;
+  margin-bottom: 14px;
+}
+
+.about__value-title {
+  font-size: 1.1rem;
+  margin-bottom: 12px;
+  letter-spacing: 0.04em;
+}
+
+.about__value-desc {
+  font-size: 0.82rem;
+  line-height: 1.75;
+  color: var(--text-secondary);
+}
+
+/* Team */
+.about__team-section { padding: 90px 0; }
+
+.about__team {
+  display: flex;
+  justify-content: center;
+  gap: 80px;
+  flex-wrap: wrap;
+}
+
+.about__member { text-align: center; max-width: 300px; }
+
+.about__member-img {
+  width: 200px; height: 200px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin: 0 auto 24px;
+  border: 3px solid var(--border);
+}
+
+.about__member-img img { width: 100%; height: 100%; object-fit: cover; }
+
+.about__member-name {
+  font-size: 1.3rem;
+  margin-bottom: 6px;
+  letter-spacing: 0.03em;
+}
+
+.about__member-role {
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 16px;
+}
+
+.about__member-quote {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 1rem;
+  color: var(--text-secondary);
+  line-height: 1.65;
+}
+
+/* CTA */
+.about__cta {
+  background: var(--brown);
+  padding: 90px 0;
+}
+
+.about__cta-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  text-align: center;
+}
+
+.about__cta h2 {
+  font-size: clamp(1.8rem, 3.5vw, 3rem);
+  color: var(--cream);
+  letter-spacing: 0.04em;
+}
+
+@media (max-width: 1024px) {
+  .about__values-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 768px) {
+  .about__intro-grid { grid-template-columns: 1fr; gap: 40px; }
+  .about__intro-img::before { display: none; }
+  .about__values-grid { grid-template-columns: 1fr; }
+  .about__team { gap: 50px; }
+}

@@ -1,0 +1,428 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Lock, CheckCircle, ChevronDown, ArrowLeft, Smartphone } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
+import emailjs from 'emailjs-com';
+import { useCart } from '../context/CartContext';
+import './Payment.css';
+
+// ─────────────────────────────────────────────────────────────
+// INSERT YOUR EMAILJS CREDENTIALS BELOW
+// ─────────────────────────────────────────────────────────────
+const EMAILJS_SERVICE_ID  = 'YOUR_SERVICE_ID';   // e.g. 'service_abc123'
+const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID';  // e.g. 'template_xyz789'
+const EMAILJS_PUBLIC_KEY  = 'YOUR_PUBLIC_KEY';   // e.g. 'AbCdEfGhIjKlMnOp'
+// ─────────────────────────────────────────────────────────────
+
+// ─────────────────────────────────────────────────────────────
+// YOUR GOOGLE PAY UPI ID
+// Replace with your actual UPI ID (e.g. 'yourname@okaxis')
+// ─────────────────────────────────────────────────────────────
+const GPAY_UPI_ID = 'YOUR_UPI_ID@bank';
+// ─────────────────────────────────────────────────────────────
+
+const SHIPPING_COST = 15;
+
+export default function Payment() {
+  const { items, subtotal, clearCart } = useCart();
+  const navigate = useNavigate();
+  const shipping = subtotal >= 150 ? 0 : SHIPPING_COST;
+  const total = subtotal + shipping;
+
+  const [step, setStep] = useState('form'); // 'form' | 'qr' | 'success'
+  const [sending, setSending] = useState(false);
+  const [emailError, setEmailError] = useState('');
+
+  const [form, setForm] = useState({
+    firstName: '', lastName: '', email: '', phone: '',
+    address: '', city: '', state: '', zip: '', country: 'India',
+  });
+  const [errors, setErrors] = useState({});
+
+  const set = (key, val) => {
+    setForm(f => ({ ...f, [key]: val }));
+    if (errors[key]) setErrors(e => ({ ...e, [key]: '' }));
+  };
+
+  const validate = () => {
+    const e = {};
+    if (!form.firstName.trim()) e.firstName = 'Required';
+    if (!form.lastName.trim()) e.lastName = 'Required';
+    if (!form.email.includes('@')) e.email = 'Valid email required';
+    if (!form.address.trim()) e.address = 'Required';
+    if (!form.city.trim()) e.city = 'Required';
+    if (!form.zip.trim()) e.zip = 'Required';
+    return e;
+  };
+
+  // UPI deep-link used in the QR code
+  const upiLink = `upi://pay?pa=${GPAY_UPI_ID}&pn=Zarvenza&am=${total.toFixed(2)}&cu=INR&tn=ZarvenzaOrder`;
+
+  const handleProceedToQR = () => {
+    const e = validate();
+    if (Object.keys(e).length) { setErrors(e); return; }
+    setStep('qr');
+    window.scrollTo(0, 0);
+  };
+
+  const handlePaymentDone = async () => {
+    setSending(true);
+    setEmailError('');
+
+    const orderLines = items
+      .map(i => `${i.name} (${i.category}) x${i.qty} — $${(i.price * i.qty).toFixed(2)}`)
+      .join('\n');
+
+    const templateParams = {
+      // These keys must match your EmailJS template variables exactly
+      customer_name:    `${form.firstName} ${form.lastName}`,
+      customer_email:   form.email,
+      customer_phone:   form.phone || 'N/A',
+      shipping_address: `${form.address}, ${form.city}, ${form.state || ''} ${form.zip}, ${form.country}`,
+      order_items:      orderLines,
+      subtotal:         `$${subtotal.toFixed(2)}`,
+      shipping:         shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`,
+      order_total:      `$${total.toFixed(2)}`,
+      payment_method:   'Google Pay (UPI)',
+    };
+
+    try {
+      await emailjs.send(
+        EMAILJS_SERVICE_ID,
+        EMAILJS_TEMPLATE_ID,
+        templateParams,
+        EMAILJS_PUBLIC_KEY
+      );
+      clearCart();
+      setStep('success');
+      window.scrollTo(0, 0);
+    } catch (err) {
+      console.error('EmailJS error:', err);
+      setEmailError('Could not send order email. Please check your EmailJS credentials.');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  /* ── SUCCESS ─────────────────────────────── */
+  if (step === 'success') {
+    return (
+      <main className="payment-page page-enter">
+        <div className="payment-success container">
+          <div className="payment-success__icon">
+            <CheckCircle size={56} strokeWidth={1.2} />
+          </div>
+          <h2>Payment Successful!</h2>
+          <div className="gold-line" style={{ margin: '18px auto' }} />
+          <p>
+            Thank you, <strong>{form.firstName}</strong>! Your order is confirmed and a
+            summary has been sent to <strong>{form.email}</strong>.
+          </p>
+          <p className="payment-success__sub">
+            Your Zarvenza order will be beautifully packaged and dispatched within 1–2 business days.
+          </p>
+          <div className="payment-success__summary">
+            {items.map(i => (
+              <div key={i.id} className="payment-success__item">
+                <img src={i.images[0]} alt={i.name} />
+                <div>
+                  <p>{i.name}</p>
+                  <span>Qty {i.qty} · ${(i.price * i.qty).toFixed(2)}</span>
+                </div>
+              </div>
+            ))}
+            <div className="payment-success__total">
+              <span>Total Paid</span>
+              <strong>${total.toFixed(2)}</strong>
+            </div>
+          </div>
+          <button className="btn-primary" onClick={() => navigate('/shop')}>
+            <span>Continue Shopping</span>
+          </button>
+        </div>
+      </main>
+    );
+  }
+
+  /* ── QR SCREEN ───────────────────────────── */
+  if (step === 'qr') {
+    return (
+      <main className="payment-page page-enter">
+        <div className="page-hero page-hero--short">
+          <div className="page-hero__bg">
+            <div className="page-hero__overlay page-hero__overlay--full" />
+          </div>
+          <div className="page-hero__content container">
+            <p className="section-label">Secure Checkout</p>
+            <h1 className="page-hero__title">Scan & Pay</h1>
+          </div>
+        </div>
+
+        <div className="payment-body container">
+          <div className="qr-layout">
+
+            <div className="qr-card">
+              <button className="payment-back" onClick={() => setStep('form')}>
+                <ArrowLeft size={14} /><span>Back to Details</span>
+              </button>
+
+              <div className="qr-header">
+                <div className="gpay-only-badge">
+                  <span className="gpay-g">G</span>
+                  <span className="gpay-text">Pay</span>
+                </div>
+                <h2 className="qr-title">Scan with Google Pay</h2>
+                <p className="qr-amount">${total.toFixed(2)}</p>
+                <p className="qr-sub">Open Google Pay → Scan QR → Confirm payment</p>
+              </div>
+
+              <div className="qr-code-wrap">
+                <QRCodeSVG
+                  value={upiLink}
+                  size={220}
+                  bgColor="transparent"
+                  fgColor="#2C1F12"
+                  level="H"
+                  includeMargin={false}
+                />
+                <div className="qr-corner qr-corner--tl" />
+                <div className="qr-corner qr-corner--tr" />
+                <div className="qr-corner qr-corner--bl" />
+                <div className="qr-corner qr-corner--br" />
+              </div>
+
+              <div className="qr-upi-id">
+                <span className="section-label">UPI ID</span>
+                <p>{GPAY_UPI_ID}</p>
+              </div>
+
+              <div className="qr-steps">
+                {[
+                  { icon: '📱', text: 'Open Google Pay on your phone' },
+                  { icon: '📷', text: 'Tap "Scan any QR code"' },
+                  { icon: '✅', text: `Confirm payment of $${total.toFixed(2)}` },
+                ].map((s, i) => (
+                  <div className="qr-step" key={i}>
+                    <span className="qr-step__num">{i + 1}</span>
+                    <span className="qr-step__icon">{s.icon}</span>
+                    <span className="qr-step__text">{s.text}</span>
+                  </div>
+                ))}
+              </div>
+
+              {emailError && <p className="qr-email-error">{emailError}</p>}
+
+              <button
+                className={`btn-primary qr-done-btn ${sending ? 'payment-submit--loading' : ''}`}
+                onClick={handlePaymentDone}
+                disabled={sending}
+              >
+                {sending
+                  ? <span className="payment-spinner" />
+                  : <><Smartphone size={16} /><span>I've Completed Payment</span></>}
+              </button>
+
+              <p className="payment-secure-note">
+                <Lock size={11} /> Clicking above will send your order confirmation email.
+              </p>
+            </div>
+
+            {/* Sidebar */}
+            <aside className="payment-sidebar qr-sidebar">
+              <h3 className="payment-sidebar__title">Order Summary</h3>
+              <div className="gold-line-left" style={{ margin: '14px 0 20px' }} />
+              <div className="qr-customer-info">
+                <p className="section-label">Shipping to</p>
+                <p className="qr-name">{form.firstName} {form.lastName}</p>
+                <p className="qr-addr">{form.address}, {form.city}</p>
+                <p className="qr-addr">{form.zip}, {form.country}</p>
+              </div>
+              <div className="payment-order-items" style={{ marginTop: 20 }}>
+                {items.map(item => (
+                  <div className="payment-order-item" key={item.id}>
+                    <div className="payment-order-item__img-wrap">
+                      <img src={item.images[0]} alt={item.name} />
+                      <span className="payment-order-item__qty">{item.qty}</span>
+                    </div>
+                    <div className="payment-order-item__info">
+                      <p className="payment-order-item__name">{item.name}</p>
+                      <p className="section-label">{item.category}</p>
+                    </div>
+                    <p className="payment-order-item__price">${(item.price * item.qty).toFixed(2)}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="payment-order-totals">
+                <div className="payment-order-row"><span>Subtotal</span><span>${subtotal.toFixed(2)}</span></div>
+                <div className="payment-order-row">
+                  <span>Shipping</span>
+                  <span>{shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`}</span>
+                </div>
+                <div className="payment-order-divider" />
+                <div className="payment-order-row payment-order-row--total">
+                  <span>Total</span><span>${total.toFixed(2)}</span>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  /* ── FORM SCREEN ─────────────────────────── */
+  if (items.length === 0) { navigate('/cart'); return null; }
+
+  return (
+    <main className="payment-page page-enter">
+      <div className="page-hero page-hero--short">
+        <div className="page-hero__bg">
+          <div className="page-hero__overlay page-hero__overlay--full" />
+        </div>
+        <div className="page-hero__content container">
+          <p className="section-label">Secure Checkout</p>
+          <h1 className="page-hero__title">Your Details</h1>
+        </div>
+      </div>
+
+      <div className="payment-body container">
+        <div className="payment-layout">
+          <div className="payment-form">
+            <button className="payment-back" onClick={() => navigate('/cart')}>
+              <ArrowLeft size={14} /><span>Back to Bag</span>
+            </button>
+
+            <section className="payment-section">
+              <h3 className="payment-section__title">Contact Information</h3>
+              <div className="form-grid form-grid--2">
+                <div className="form-group">
+                  <label>First Name</label>
+                  <input type="text" placeholder="Arjun" value={form.firstName}
+                    onChange={e => set('firstName', e.target.value)}
+                    className={errors.firstName ? 'input-error' : ''} />
+                  {errors.firstName && <span className="form-error">{errors.firstName}</span>}
+                </div>
+                <div className="form-group">
+                  <label>Last Name</label>
+                  <input type="text" placeholder="Sharma" value={form.lastName}
+                    onChange={e => set('lastName', e.target.value)}
+                    className={errors.lastName ? 'input-error' : ''} />
+                  {errors.lastName && <span className="form-error">{errors.lastName}</span>}
+                </div>
+              </div>
+              <div className="form-grid form-grid--2">
+                <div className="form-group">
+                  <label>Email</label>
+                  <input type="email" placeholder="arjun@example.com" value={form.email}
+                    onChange={e => set('email', e.target.value)}
+                    className={errors.email ? 'input-error' : ''} />
+                  {errors.email && <span className="form-error">{errors.email}</span>}
+                </div>
+                <div className="form-group">
+                  <label>Phone <span className="form-optional">(optional)</span></label>
+                  <input type="tel" placeholder="+91 98765 43210" value={form.phone}
+                    onChange={e => set('phone', e.target.value)} />
+                </div>
+              </div>
+            </section>
+
+            <section className="payment-section">
+              <h3 className="payment-section__title">Shipping Address</h3>
+              <div className="form-group">
+                <label>Street Address</label>
+                <input type="text" placeholder="42 MG Road, Koramangala" value={form.address}
+                  onChange={e => set('address', e.target.value)}
+                  className={errors.address ? 'input-error' : ''} />
+                {errors.address && <span className="form-error">{errors.address}</span>}
+              </div>
+              <div className="form-grid form-grid--3">
+                <div className="form-group">
+                  <label>City</label>
+                  <input type="text" placeholder="Bengaluru" value={form.city}
+                    onChange={e => set('city', e.target.value)}
+                    className={errors.city ? 'input-error' : ''} />
+                  {errors.city && <span className="form-error">{errors.city}</span>}
+                </div>
+                <div className="form-group">
+                  <label>State</label>
+                  <input type="text" placeholder="Karnataka" value={form.state}
+                    onChange={e => set('state', e.target.value)} />
+                </div>
+                <div className="form-group">
+                  <label>PIN Code</label>
+                  <input type="text" placeholder="560034" value={form.zip}
+                    onChange={e => set('zip', e.target.value)}
+                    className={errors.zip ? 'input-error' : ''} />
+                  {errors.zip && <span className="form-error">{errors.zip}</span>}
+                </div>
+              </div>
+              <div className="form-group">
+                <label>Country</label>
+                <div className="form-select-wrap">
+                  <select value={form.country} onChange={e => set('country', e.target.value)}>
+                    {['India','United States','United Kingdom','France','Germany','Japan','Australia','Canada','UAE','Singapore'].map(c => (
+                      <option key={c}>{c}</option>
+                    ))}
+                  </select>
+                  <ChevronDown size={14} />
+                </div>
+              </div>
+            </section>
+
+            <section className="payment-section">
+              <h3 className="payment-section__title">Payment Method</h3>
+              <div className="gpay-only-badge">
+                <span className="gpay-g">G</span>
+                <span className="gpay-text">Pay</span>
+                <span className="gpay-only-label">Google Pay · UPI QR Code</span>
+              </div>
+              <p className="gpay-only-note">
+                A QR code will be shown on the next screen. Open Google Pay, scan, and confirm the payment.
+              </p>
+            </section>
+
+            <button className="btn-primary payment-submit" onClick={handleProceedToQR}>
+              <Lock size={15} />
+              <span>Proceed to Payment · ${total.toFixed(2)}</span>
+            </button>
+
+            <p className="payment-secure-note">
+              <Lock size={11} /> 256-bit encrypted · Secure checkout
+            </p>
+          </div>
+
+          <aside className="payment-sidebar">
+            <h3 className="payment-sidebar__title">Your Order</h3>
+            <div className="gold-line-left" style={{ margin: '14px 0 20px' }} />
+            <div className="payment-order-items">
+              {items.map(item => (
+                <div className="payment-order-item" key={item.id}>
+                  <div className="payment-order-item__img-wrap">
+                    <img src={item.images[0]} alt={item.name} />
+                    <span className="payment-order-item__qty">{item.qty}</span>
+                  </div>
+                  <div className="payment-order-item__info">
+                    <p className="payment-order-item__name">{item.name}</p>
+                    <p className="section-label">{item.category}</p>
+                  </div>
+                  <p className="payment-order-item__price">${(item.price * item.qty).toFixed(2)}</p>
+                </div>
+              ))}
+            </div>
+            <div className="payment-order-totals">
+              <div className="payment-order-row"><span>Subtotal</span><span>${subtotal.toFixed(2)}</span></div>
+              <div className="payment-order-row">
+                <span>Shipping</span>
+                <span>{shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`}</span>
+              </div>
+              <div className="payment-order-divider" />
+              <div className="payment-order-row payment-order-row--total">
+                <span>Total</span><span>${total.toFixed(2)}</span>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </main>
+  );
+}
