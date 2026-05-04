@@ -16,6 +16,7 @@ app.use(cors({
   credentials: true,
 }));
 
+app.options('*', cors());
 // ── Raw body for Razorpay webhook (BEFORE express.json) ──────────
 // Razorpay HMAC verification needs raw Buffer, not parsed JSON
 app.use('/api/payment/webhook', express.raw({ type: 'application/json' }));
