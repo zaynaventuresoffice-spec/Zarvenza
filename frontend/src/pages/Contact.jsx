@@ -43,7 +43,7 @@ export default function Contact() {
                 { icon: <Mail size={18} />, label: "Email", value: "zaynaventures.office@gmail.com" },
                 { icon: <Phone size={18} />, label: "Phone", value: "+91 8651447435" },
                 { icon: <MapPin size={18} />, label: "Address", value: "Patahi, East Champaran" },
-                { icon: <Clock size={18} />, label: "Hours", value: "Mon–Fri: 9am – 6pm CET" },
+                { icon: <Clock size={18} />, label: "Hours", value: "Mon–Fri: 9am – 6pm IST" },
               ].map((d, i) => (
                 <div key={i} className="contact__detail">
                   <div className="contact__detail-icon">{d.icon}</div>
