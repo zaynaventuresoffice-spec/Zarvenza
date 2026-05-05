@@ -23,7 +23,7 @@ export default function Shop() {
       {/* Page hero */}
       <div className="page-hero">
         <div className="page-hero__bg">
-          <img src="https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=1400&q=80" alt="Shop" />
+          <img src="https://images.unsplash.com/photo-1485230895905-ec40ba36b9bc?w=1400&q=80" alt="Luxury Editorial" />
           <div className="page-hero__overlay" />
         </div>
         <div className="page-hero__content container">
