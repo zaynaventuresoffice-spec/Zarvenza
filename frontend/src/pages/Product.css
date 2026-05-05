@@ -182,6 +182,7 @@
 }
 
 .product__wish-btn:hover { color: var(--gold); border-color: var(--gold); }
+.product__wish-btn--active { color: var(--gold) !important; border-color: var(--gold) !important; }
 
 .product__trust {
   display: flex;

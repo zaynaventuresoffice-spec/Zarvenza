@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import { CartProvider } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
+import { WishlistProvider } from './context/WishlistContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -12,6 +13,7 @@ import About from './pages/About';
 import Contact from './pages/Contact';
 import Policies from './pages/Policies';
 import Cart from './pages/Cart';
+import Wishlist from './pages/Wishlist';
 import Payment from './pages/Payment';
 import Auth from './pages/Auth';
 import Orders from './pages/Orders';
@@ -27,6 +29,7 @@ export default function App() {
   return (
     <AuthProvider>
       <CartProvider>
+        <WishlistProvider>
         <BrowserRouter>
           <ScrollToTop />
           <Navbar />
@@ -38,6 +41,7 @@ export default function App() {
             <Route path="/contact"  element={<Contact />} />
             <Route path="/policies" element={<Policies />} />
             <Route path="/cart"     element={<Cart />} />
+            <Route path="/wishlist" element={<Wishlist />} />
             <Route path="/login"    element={<Auth mode="login" />} />
             <Route path="/signup"   element={<Auth mode="signup" />} />
 
@@ -54,6 +58,7 @@ export default function App() {
           </Routes>
           <Footer />
         </BrowserRouter>
+        </WishlistProvider>
       </CartProvider>
     </AuthProvider>
   );

@@ -2,11 +2,14 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, ShoppingBag, Star, Check } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useWishlist } from '../context/WishlistContext';
 import './ProductCard.css';
 
 export default function ProductCard({ product }) {
   const { addToCart } = useCart();
+  const { toggleWishlist, isWishlisted } = useWishlist();
   const [added, setAdded] = useState(false);
+  const wishlisted = isWishlisted(product.id);
 
   const handleAdd = (e) => {
     e.preventDefault();
@@ -14,6 +17,12 @@ export default function ProductCard({ product }) {
     addToCart(product, 1);
     setAdded(true);
     setTimeout(() => setAdded(false), 1800);
+  };
+
+  const handleWishlist = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleWishlist(product);
   };
 
   return (
@@ -35,8 +44,12 @@ export default function ProductCard({ product }) {
             <span>Quick View</span>
           </Link>
         </div>
-        <button className="pcard__wish" aria-label="Wishlist">
-          <Heart size={16} />
+        <button
+          className={`pcard__wish ${wishlisted ? 'pcard__wish--active' : ''}`}
+          aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+          onClick={handleWishlist}
+        >
+          <Heart size={16} fill={wishlisted ? 'currentColor' : 'none'} />
         </button>
       </div>
 

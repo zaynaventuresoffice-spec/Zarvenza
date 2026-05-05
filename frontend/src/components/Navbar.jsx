@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, ShoppingBag, Search, Heart, User, LogOut, Package, ChevronDown } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { useWishlist } from '../context/WishlistContext';
 import './Navbar.css';
 
 export default function Navbar() {
@@ -13,6 +14,7 @@ export default function Navbar() {
   const navigate = useNavigate();
   const { totalItems } = useCart();
   const { user, logout } = useAuth();
+  const { totalWishlist } = useWishlist();
   const userMenuRef = useRef(null);
 
   useEffect(() => {
@@ -66,7 +68,10 @@ export default function Navbar() {
 
         <div className="navbar__icons">
           <button className="navbar__icon-btn" aria-label="Search"><Search size={18} /></button>
-          <button className="navbar__icon-btn" aria-label="Wishlist"><Heart size={18} /></button>
+          <Link to="/wishlist" className="navbar__icon-btn navbar__icon-btn--wish" aria-label="Wishlist">
+            <Heart size={18} />
+            {totalWishlist > 0 && <span className="navbar__bag-count">{totalWishlist}</span>}
+          </Link>
           <Link to="/cart" className="navbar__icon-btn navbar__icon-btn--bag" aria-label="Bag">
             <ShoppingBag size={18} />
             {totalItems > 0 && <span className="navbar__bag-count">{totalItems}</span>}
@@ -119,6 +124,7 @@ export default function Navbar() {
           <Link to="/contact">Contact</Link>
           <Link to="/policies">Policies</Link>
           <Link to="/cart">Bag {totalItems > 0 && `(${totalItems})`}</Link>
+          <Link to="/wishlist">Wishlist {totalWishlist > 0 && `(${totalWishlist})`}</Link>
           {user ? (
             <>
               <Link to="/orders">My Orders</Link>

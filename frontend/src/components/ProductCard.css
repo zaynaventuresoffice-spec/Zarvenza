@@ -71,6 +71,7 @@
 }
 
 .pcard:hover .pcard__wish { opacity: 1; }
+.pcard__wish--active { opacity: 1 !important; color: var(--gold) !important; }
 .pcard__wish:hover { color: var(--gold); }
 
 .pcard__body { padding: 18px 20px 20px; }

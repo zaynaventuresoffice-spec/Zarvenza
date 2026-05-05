@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Star, ShoppingBag, Heart, ArrowLeft, Check, Truck, RefreshCw, Shield } from 'lucide-react';
 import { products } from '../data/products';
 import { useCart } from '../context/CartContext';
+import { useWishlist } from '../context/WishlistContext';
 import ProductCard from '../components/ProductCard';
 import './Product.css';
 
@@ -10,6 +11,7 @@ export default function Product() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { toggleWishlist, isWishlisted } = useWishlist();
   const product = products.find(p => p.id === Number(id));
   const [activeImg, setActiveImg] = useState(0);
   const [qty, setQty] = useState(1);
@@ -110,7 +112,13 @@ export default function Product() {
                   <><ShoppingBag size={16} /><span>Add to Bag</span></>
                 )}
               </button>
-              <button className="product__wish-btn"><Heart size={18} /></button>
+              <button
+                className={`product__wish-btn ${isWishlisted(product.id) ? 'product__wish-btn--active' : ''}`}
+                onClick={() => toggleWishlist(product)}
+                aria-label={isWishlisted(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
+              >
+                <Heart size={18} fill={isWishlisted(product.id) ? 'currentColor' : 'none'} />
+              </button>
             </div>
 
             <div className="product__trust">
