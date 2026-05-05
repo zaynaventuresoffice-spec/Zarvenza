@@ -2,9 +2,10 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import { runMigrations } from './db.js';
-import authRoutes    from './routes/auth.js';
-import orderRoutes   from './routes/orders.js';
-import paymentRoutes from './routes/payment.js';
+import authRoutes       from './routes/auth.js';
+import orderRoutes      from './routes/orders.js';
+import paymentRoutes    from './routes/payment.js';
+import cartWishlistRoutes from './routes/cartWishlist.js';
 
 const app  = express();
 const PORT = process.env.PORT || 4000;
@@ -36,6 +37,7 @@ app.use((req, _res, next) => {
 app.use('/api/auth',    authRoutes);
 app.use('/api/orders',  orderRoutes);
 app.use('/api/payment', paymentRoutes);
+app.use('/api',         cartWishlistRoutes);
 
 // ── Health check ─────────────────────────────────────────────────
 app.get('/api/health', (_req, res) =>

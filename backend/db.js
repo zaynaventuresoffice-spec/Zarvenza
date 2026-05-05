@@ -85,10 +85,37 @@ export async function runMigrations() {
     );
 
     CREATE TABLE IF NOT EXISTS wishlist (
-      id         SERIAL PRIMARY KEY,
-      user_id    INTEGER     NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      product_id INTEGER     NOT NULL,
-      added_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      id             SERIAL PRIMARY KEY,
+      user_id        INTEGER       NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      product_id     INTEGER       NOT NULL,
+      name           TEXT,
+      price          NUMERIC(10,2),
+      image_url      TEXT,
+      category       TEXT,
+      original_price NUMERIC(10,2),
+      badge          TEXT,
+      rating         NUMERIC(3,1),
+      reviews        INTEGER,
+      images         TEXT,
+      added_at       TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+      UNIQUE(user_id, product_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS cart (
+      id             SERIAL PRIMARY KEY,
+      user_id        INTEGER       NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      product_id     INTEGER       NOT NULL,
+      name           TEXT,
+      price          NUMERIC(10,2),
+      qty            INTEGER       NOT NULL DEFAULT 1,
+      image_url      TEXT,
+      category       TEXT,
+      original_price NUMERIC(10,2),
+      badge          TEXT,
+      rating         NUMERIC(3,1),
+      reviews        INTEGER,
+      images         TEXT,
+      added_at       TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
       UNIQUE(user_id, product_id)
     );
   `);

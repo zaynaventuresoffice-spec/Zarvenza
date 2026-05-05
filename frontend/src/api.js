@@ -38,4 +38,14 @@ export const api = {
   getOrder:    (id)  => request(`/orders/${id}`),
   trackOrder:  (num) => request(`/orders/track/${num}`),
   cancelOrder: (id)  => request(`/orders/${id}/cancel`, { method: 'PUT' }),
+
+  // ── Cart ──────────────────────────────────────────────────────
+  getCart:   ()      => request('/cart'),
+  syncCart:  (items) => request('/cart', { method: 'PUT',    body: JSON.stringify({ items }) }),
+  clearCart: ()      => request('/cart', { method: 'DELETE' }),
+
+  // ── Wishlist ──────────────────────────────────────────────────
+  getWishlist:         ()        => request('/wishlist'),
+  addToWishlist:       (product) => request('/wishlist',              { method: 'POST',   body: JSON.stringify(product) }),
+  removeFromWishlist:  (id)      => request(`/wishlist/${id}`,        { method: 'DELETE' }),
 };
