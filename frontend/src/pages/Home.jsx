@@ -87,9 +87,14 @@ export default function Home() {
         </div>
         <div className="banner__content container">
           <p className="section-label">Exclusive Offer</p>
-          <h2 className="banner__title">The Signature Ritual Set</h2>
-          <p className="banner__sub">A complete luxury ritual in one curated collection. Free shipping on orders over $150.</p>
-          <Link to="/shop" className="btn-primary"><span>Shop Now</span><ArrowRight size={16} /></Link>
+          <h2 className="banner__title">The Signature Collection</h2>
+          <p className="banner__sub">
+            Curated styles that blend tradition with modern elegance. Enjoy complimentary shipping on orders above ₹1500.
+          </p>
+          <Link to="/shop" className="btn-primary">
+            <span>Explore Collection</span>
+            <ArrowRight size={16} />
+          </Link>
         </div>
       </section>
 
@@ -102,10 +107,10 @@ export default function Home() {
         </div>
         <div className="cat-grid">
           {[
-            { name: "Fragrance", img: "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=500&q=80" },
-            { name: "Skincare", img: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=500&q=80" },
-            { name: "Makeup", img: "https://images.unsplash.com/photo-1586495777744-4e6232be4ef2?w=500&q=80" },
-            { name: "Body & Home", img: "https://images.unsplash.com/photo-1602928298849-3d4c5a79ca64?w=500&q=80" },
+            { name: "Ethnic Wear", img: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=500&q=80" },
+            { name: "Western Wear", img: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=500&q=80" },
+            { name: "Footwear", img: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&q=80" },
+            { name: "Accessories", img: "https://images.unsplash.com/photo-1519741497674-611481863552?w=500&q=80" },
           ].map((cat, i) => (
             <Link to="/shop" key={i} className="cat-card">
               <img src={cat.img} alt={cat.name} />
@@ -123,9 +128,9 @@ export default function Home() {
         <div className="container testimonial__inner">
           <div className="gold-line" style={{ marginBottom: '40px' }}></div>
           <p className="testimonial__quote">
-            "Zarvenza is not just a beauty brand — it is a philosophy. Each product an act of self-love, each scent a memory waiting to be made."
+            "Zarvenza is more than fashion — it is a statement. Every piece embodies elegance, every design defines confidence."
           </p>
-          <p className="testimonial__author">— Isabelle V., Paris</p>
+          {/* <p className="testimonial__author">— Isabelle V., Paris</p> */}
           <div className="gold-line" style={{ marginTop: '40px' }}></div>
         </div>
       </section>
