@@ -145,4 +145,4 @@ export const products = [
   },
 ];
 
-export const categories = ["All", "Ethnic Wear","Fragrance", "Skincare", "Makeup", "Body", "Hair", "Home"];
+export const categories = ["All", "Ethnic Wear","Western Wear", "Footwear", "Body", "Hair", "Home"];

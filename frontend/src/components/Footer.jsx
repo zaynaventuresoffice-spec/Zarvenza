@@ -28,9 +28,9 @@ export default function Footer() {
           <div className="footer__col">
             <h4 className="footer__col-title">Categories</h4>
             <Link to="/shop">Ethnic Wear</Link>
-            <Link to="/shop">Fragrance</Link>
-            <Link to="/shop">Skincare</Link>
-            <Link to="/shop">Makeup</Link>
+            <Link to="/shop">Western Wear</Link>
+            <Link to="/shop">Footwear</Link>
+            {/* <Link to="/shop">Makeup</Link> */}
             <Link to="/shop">Body & Hair</Link>
             <Link to="/shop">Home</Link>
           </div>
