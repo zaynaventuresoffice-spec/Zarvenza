@@ -8,7 +8,7 @@ export default function About() {
       {/* Hero */}
       <div className="page-hero">
         <div className="page-hero__bg">
-          <img src="https://images.unsplash.com/photo-1515688594390-b649af70d282?w=1400&q=80" alt="About" />
+          <img src="https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=1400&q=80" alt="About" />
           <div className="page-hero__overlay" />
         </div>
         <div className="page-hero__content container">
@@ -24,9 +24,10 @@ export default function About() {
             <p className="section-label">The Origin</p>
             <h2 className="about__heading">A Vision of Refined Beauty</h2>
             <div className="gold-line-left" style={{ margin: '20px 0 28px' }}></div>
-            <p>Zarvenza was founded in 2026 by Sameer Zaman, a third-generation perfumer trained in Grasse, and cosmetic scientist Dr. Arhan Kali, whose laboratory formulas have graced the dressing tables of discerning women across four continents.</p>
-            <p>Their shared belief: that luxury beauty should not be manufactured — it should be crafted, slowly and with intention, using ingredients that honour both the woman who wears them and the earth that yields them.</p>
-            <p>Every product in the Zarvenza collection is the result of months, sometimes years, of refinement. We do not chase trends. We create rituals.</p>
+            <p>Zarvenza is a modern ethnic wear brand crafted for women who love elegance with comfort. Inspired by timeless Indian designs and refined craftsmanship, our collections blend traditional aesthetics with a contemporary touch.</p>
+            <p>At Zarvenza, we focus on premium fabrics, detailed embroidery, and thoughtfully designed silhouettes that make every outfit feel special. Whether it’s a festive occasion or everyday elegance, our pieces are created to make you feel confident and graceful.</p>
+            <p>We believe fashion is not just about clothing — it’s about expressing your personality. That’s why every Zarvenza outfit is crafted with care, quality, and attention to detail.</p>
+            <p>Zarvenza — Crafted for Modern Royalty</p>
           </div>
           <div className="about__intro-img">
             <img src="https://images.unsplash.com/photo-1579591919791-0e3737ae3808?w=700&q=80" alt="Founder" />
@@ -44,10 +45,10 @@ export default function About() {
           </div>
           <div className="about__values-grid">
             {[
-              { num: "01", title: "Provenance", desc: "Every raw material is traced to its source. We partner with family-run farms and cooperatives who share our commitment to quality and sustainability." },
-              { num: "02", title: "Mastery", desc: "Our formulas are developed with master perfumers and dermatologists. We accept nothing less than exceptional performance and sensorial delight." },
-              { num: "03", title: "Integrity", desc: "Cruelty-free by principle, vegan by choice, and transparent always. We publish full ingredient lists and our supply chain partnerships." },
-              { num: "04", title: "Longevity", desc: "We believe in less, but better. Our collections are designed to last, built around timeless ingredients that improve with every reformulation." },
+              { num: "01", title: "Craftsmanship", desc: "Every Zarvenza piece is thoughtfully crafted with attention to detail, combining traditional techniques with modern design for a refined finish." },
+              { num: "02", title: "Premium Quality", desc: "We use carefully selected fabrics and materials to ensure comfort, durability, and a luxurious feel in every outfit." },
+              { num: "03", title: "Elegant Design", desc: "Our collections blend timeless Indian aesthetics with contemporary silhouettes, creating styles that are both classic and modern." },
+              { num: "04", title: "Confidence", desc: "We design with the belief that fashion should empower. Every Zarvenza outfit is made to make you feel confident, graceful, and unique." },
             ].map((v, i) => (
               <div key={i} className="about__value">
                 <span className="about__value-num">{v.num}</span>
@@ -60,7 +61,7 @@ export default function About() {
       </section>
 
       {/* Team */}
-      <section className="container about__team-section">
+      {/* <section className="container about__team-section">
         <div style={{ textAlign: 'center', marginBottom: '60px' }}>
           <p className="section-label">The Makers</p>
           <h2 className="about__heading" style={{ textAlign: 'center' }}>Meet Our Founders</h2>
@@ -91,7 +92,7 @@ export default function About() {
             </div>
           ))}
         </div>
-      </section>
+      </section> */}
 
       {/* CTA */}
       <section className="about__cta">

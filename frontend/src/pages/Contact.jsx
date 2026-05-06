@@ -40,10 +40,10 @@ export default function Contact() {
 
             <div className="contact__details">
               {[
-                { icon: <Mail size={18} />, label: "Email", value: "zaynaventures.office@gmail.com" },
-                { icon: <Phone size={18} />, label: "Phone", value: "+91 8651447435" },
-                { icon: <MapPin size={18} />, label: "Address", value: "Patahi, East Champaran" },
-                { icon: <Clock size={18} />, label: "Hours", value: "Mon–Fri: 9am – 6pm IST" },
+                { icon: <Mail size={18} />, label: "Email", value: "support@zarvenza.in" },
+                { icon: <Phone size={18} />, label: "WhatsAPP Support", value: "+91 77018 58673" },
+                { icon: <MapPin size={18} />, label: "Address", value: "Sarita Vihar, New Delhi – 110076" },
+                { icon: <Clock size={18} />, label: "Hours", value: "Mon – Sat: 10 AM – 07:00 PM IST" },
               ].map((d, i) => (
                 <div key={i} className="contact__detail">
                   <div className="contact__detail-icon">{d.icon}</div>
