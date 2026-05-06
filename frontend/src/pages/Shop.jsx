@@ -1,16 +1,31 @@
-import { useState } from 'react';
-import { SlidersHorizontal, ChevronDown } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { SlidersHorizontal, ChevronDown, X } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
 import { useProducts } from '../context/ProductsContext';
 import './Shop.css';
 
 export default function Shop() {
   const { products, categories, loading, error } = useProducts();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeCategory, setActiveCategory] = useState('All');
   const [sortBy, setSortBy] = useState('featured');
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
+
+  // Sync URL search param → local state on mount / param change
+  useEffect(() => {
+    const q = searchParams.get('search') || '';
+    setSearchTerm(q);
+  }, [searchParams]);
+
+  function clearSearch() {
+    setSearchTerm('');
+    setSearchParams({});
+  }
 
   const filtered = products
     .filter(p => activeCategory === 'All' || p.category === activeCategory)
+    .filter(p => !searchTerm || p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.category.toLowerCase().includes(searchTerm.toLowerCase()))
     .sort((a, b) => {
       if (sortBy === 'price-asc')  return a.price - b.price;
       if (sortBy === 'price-desc') return b.price - a.price;
@@ -35,6 +50,12 @@ export default function Shop() {
       <div className="shop__body container">
         {/* Filter bar */}
         <div className="shop__toolbar">
+          {searchTerm && (
+            <div className="shop__search-banner">
+              <span>Showing results for <strong>"{searchTerm}"</strong> — {filtered.length} found</span>
+              <button className="shop__search-clear" onClick={clearSearch}><X size={14} /> Clear</button>
+            </div>
+          )}
           <div className="shop__cats">
             {categories.map(cat => (
               <button

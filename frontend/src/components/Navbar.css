@@ -4,6 +4,8 @@
   z-index: 100;
   padding: 28px 0;
   transition: all 0.4s ease;
+  /* needed for search overlay positioning */
+  isolation: isolate;
 }
 
 .navbar--solid {
@@ -288,4 +290,154 @@
 .qr-order-ref .section-label {
   display: block;
   margin-bottom: 4px;
+}
+
+/* ── Search ─────────────────────────────────────────────────── */
+.navbar__search-wrap {
+  position: static;
+  display: flex;
+  align-items: center;
+}
+
+/* Full-width search overlay that drops down from the navbar */
+.navbar__search-overlay {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: rgba(250, 246, 238, 0.99);
+  backdrop-filter: blur(16px);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 40px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 150;
+  transform: translateY(-8px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+.navbar__search-wrap--open .navbar__search-overlay {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: all;
+}
+
+.navbar__search-input {
+  flex: 1;
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  background: var(--white);
+  font-family: inherit;
+  font-size: 0.88rem;
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.navbar__search-input:focus {
+  border-color: var(--gold);
+}
+
+.navbar__search-hint {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+/* Dropdown results */
+.navbar__search-results {
+  position: absolute;
+  top: 100%;
+  left: 40px;
+  right: 40px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-top: none;
+  box-shadow: 0 8px 32px rgba(74, 55, 40, 0.12);
+  z-index: 151;
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.navbar__search-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--border);
+  transition: var(--transition);
+  text-decoration: none;
+  color: var(--text-primary);
+}
+
+.navbar__search-item:last-of-type { border-bottom: none; }
+.navbar__search-item:hover { background: var(--cream); }
+
+.navbar__search-thumb {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+}
+
+.navbar__search-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.navbar__search-name {
+  font-size: 0.85rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.navbar__search-cat {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.navbar__search-price {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1rem;
+  color: var(--gold);
+  flex-shrink: 0;
+}
+
+.navbar__search-all {
+  display: block;
+  width: 100%;
+  padding: 11px 16px;
+  background: var(--cream-dark);
+  border: none;
+  border-top: 1px solid var(--border);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-align: left;
+  cursor: pointer;
+  transition: var(--transition);
+  font-family: inherit;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.navbar__search-all:hover { color: var(--gold); background: var(--cream); }
+
+.navbar__search-empty {
+  padding: 20px 16px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  text-align: center;
 }

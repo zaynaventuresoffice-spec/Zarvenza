@@ -4,18 +4,24 @@ import { Menu, X, ShoppingBag, Search, Heart, User, LogOut, Package, ChevronDown
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useWishlist } from '../context/WishlistContext';
+import { useProducts } from '../context/ProductsContext';
 import './Navbar.css';
 
 export default function Navbar() {
   const [scrolled, setScrolled]     = useState(false);
   const [menuOpen, setMenuOpen]     = useState(false);
   const [userMenuOpen, setUserMenu] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { totalItems } = useCart();
   const { user, logout } = useAuth();
   const { totalWishlist } = useWishlist();
-  const userMenuRef = useRef(null);
+  const { products } = useProducts();
+  const userMenuRef  = useRef(null);
+  const searchRef    = useRef(null);
+  const searchInput  = useRef(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -23,24 +29,43 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  useEffect(() => { setMenuOpen(false); setUserMenu(false); }, [pathname]);
+  useEffect(() => { setMenuOpen(false); setUserMenu(false); closeSearch(); }, [pathname]);
 
   // Close user menu on outside click
   useEffect(() => {
     const handler = (e) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
-        setUserMenu(false);
-      }
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) setUserMenu(false);
+      if (searchRef.current && !searchRef.current.contains(e.target)) closeSearch();
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-  };
+  // Focus input when search opens
+  useEffect(() => {
+    if (searchOpen) setTimeout(() => searchInput.current?.focus(), 50);
+  }, [searchOpen]);
 
+  function openSearch() { setSearchOpen(true); }
+  function closeSearch() { setSearchOpen(false); setSearchQuery(''); }
+
+  function handleSearchKeyDown(e) {
+    if (e.key === 'Escape') closeSearch();
+    if (e.key === 'Enter' && searchQuery.trim()) {
+      navigate(`/shop?search=${encodeURIComponent(searchQuery.trim())}`);
+      closeSearch();
+    }
+  }
+
+  // Live results — up to 5 matches
+  const searchResults = searchQuery.trim().length > 1
+    ? products.filter(p =>
+        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.category.toLowerCase().includes(searchQuery.toLowerCase())
+      ).slice(0, 5)
+    : [];
+
+  const handleLogout = () => { logout(); navigate('/'); };
   const isHome = pathname === '/';
 
   return (
@@ -67,7 +92,66 @@ export default function Navbar() {
         </nav>
 
         <div className="navbar__icons">
-          <button className="navbar__icon-btn" aria-label="Search"><Search size={18} /></button>
+
+          {/* Search */}
+          <div className={`navbar__search-wrap ${searchOpen ? 'navbar__search-wrap--open' : ''}`} ref={searchRef}>
+            <button
+              className="navbar__icon-btn navbar__search-toggle"
+              aria-label="Search"
+              onClick={() => searchOpen ? closeSearch() : openSearch()}
+            >
+              {searchOpen ? <X size={18} /> : <Search size={18} />}
+            </button>
+
+            <div className="navbar__search-box">
+              <input
+                ref={searchInput}
+                className="navbar__search-input"
+                placeholder="Search products…"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
+                aria-label="Search products"
+              />
+
+              {searchResults.length > 0 && (
+                <div className="navbar__search-results">
+                  {searchResults.map(p => (
+                    <Link
+                      key={p.id}
+                      to={`/product/${p.id}`}
+                      className="navbar__search-item"
+                      onClick={closeSearch}
+                    >
+                      <img
+                        src={p.images?.[0]}
+                        alt={p.name}
+                        className="navbar__search-thumb"
+                      />
+                      <div className="navbar__search-info">
+                        <span className="navbar__search-name">{p.name}</span>
+                        <span className="navbar__search-cat">{p.category}</span>
+                      </div>
+                      <span className="navbar__search-price">₹{p.price}</span>
+                    </Link>
+                  ))}
+                  <button
+                    className="navbar__search-all"
+                    onClick={() => { navigate(`/shop?search=${encodeURIComponent(searchQuery.trim())}`); closeSearch(); }}
+                  >
+                    See all results for "{searchQuery}"
+                  </button>
+                </div>
+              )}
+
+              {searchQuery.trim().length > 1 && searchResults.length === 0 && (
+                <div className="navbar__search-results">
+                  <p className="navbar__search-empty">No products found for "{searchQuery}"</p>
+                </div>
+              )}
+            </div>
+          </div>
+
           <Link to="/wishlist" className="navbar__icon-btn navbar__icon-btn--wish" aria-label="Wishlist">
             <Heart size={18} />
             {totalWishlist > 0 && <span className="navbar__bag-count">{totalWishlist}</span>}
