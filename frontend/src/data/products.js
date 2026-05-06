@@ -116,7 +116,7 @@ export const products = [
     id: 1,
     name: "ZARVENZA Women Embroidered Kurta Set with Dupatta",
     category: "Ethnic Wear",
-    price: 1999,
+    price: 1,
     originalPrice: 3499,
     rating: 4.8,
     reviews: 32,
