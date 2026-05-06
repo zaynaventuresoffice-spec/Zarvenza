@@ -29,9 +29,9 @@ export default function About() {
             <p>We believe fashion is not just about clothing — it’s about expressing your personality. That’s why every Zarvenza outfit is crafted with care, quality, and attention to detail.</p>
             <p>Zarvenza — Crafted for Modern Royalty</p>
           </div>
-          <div className="about__intro-img">
+          {/* <div className="about__intro-img">
             <img src="https://images.unsplash.com/photo-1579591919791-0e3737ae3808?w=700&q=80" alt="Founder" />
-          </div>
+          </div> */}
         </div>
       </section>
 
