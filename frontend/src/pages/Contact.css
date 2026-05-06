@@ -170,3 +170,23 @@
   .contact__form-wrap { padding: 36px 28px; }
   .contact__form-row { grid-template-columns: 1fr; }
 }
+
+/* Sending spinner */
+.spin {
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Error banner */
+.contact__error {
+  padding: 20px 24px;
+  background: #fff3f3;
+  border-left: 3px solid #e05a5a;
+  border-radius: 2px;
+  margin-bottom: 24px;
+  font-size: 0.86rem;
+  color: #7a2020;
+  line-height: 1.6;
+}

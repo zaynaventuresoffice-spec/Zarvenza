@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@emailjs/browser": "^4.4.1",
+    "dotenv": "^17.4.2",
     "emailjs-com": "^3.2.0",
     "lucide-react": "^1.14.0",
     "qrcode.react": "^4.2.0",
