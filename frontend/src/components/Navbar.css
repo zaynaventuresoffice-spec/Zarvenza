@@ -299,8 +299,8 @@
   align-items: center;
 }
 
-/* Full-width search overlay that drops down from the navbar */
-.navbar__search-overlay {
+/* Hidden by default — shown only when open */
+.navbar__search-box {
   position: absolute;
   top: 100%;
   left: 0;
@@ -314,13 +314,16 @@
   align-items: center;
   gap: 12px;
   z-index: 150;
+
+  /* Hidden state */
   transform: translateY(-8px);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.22s ease, transform 0.22s ease;
 }
 
-.navbar__search-wrap--open .navbar__search-overlay {
+/* Visible state */
+.navbar__search-wrap--open .navbar__search-box {
   transform: translateY(0);
   opacity: 1;
   pointer-events: all;
@@ -353,8 +356,8 @@
 .navbar__search-results {
   position: absolute;
   top: 100%;
-  left: 40px;
-  right: 40px;
+  left: 0;
+  right: 0;
   background: var(--white);
   border: 1px solid var(--border);
   border-top: none;
