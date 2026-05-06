@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Star, ShoppingBag, Heart, ArrowLeft, Check, Truck, RefreshCw, Shield } from 'lucide-react';
-import { products } from '../data/products';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
+import { useProducts } from '../context/ProductsContext';
 import ProductCard from '../components/ProductCard';
+import { api } from '../api';
 import './Product.css';
 
 export default function Product() {
@@ -12,10 +13,27 @@ export default function Product() {
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const { toggleWishlist, isWishlisted } = useWishlist();
-  const product = products.find(p => p.id === Number(id));
+  const { products } = useProducts();
+  const [product, setProduct] = useState(null);
+  const [loadingProduct, setLoadingProduct] = useState(true);
   const [activeImg, setActiveImg] = useState(0);
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
+
+  useEffect(() => {
+    setLoadingProduct(true);
+    setActiveImg(0);
+    api.getProduct(id)
+      .then(p => setProduct(p))
+      .catch(() => setProduct(null))
+      .finally(() => setLoadingProduct(false));
+  }, [id]);
+
+  if (loadingProduct) return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+      <div className="auth-spinner" />
+    </div>
+  );
 
   if (!product) return (
     <div className="product-not-found container">

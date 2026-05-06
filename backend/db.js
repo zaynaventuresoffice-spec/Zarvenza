@@ -25,6 +25,27 @@ export const db = {
 // ── Schema migration (runs on every startup, idempotent) ─────────
 export async function runMigrations() {
   await pool.query(`
+    CREATE TABLE IF NOT EXISTS products (
+      id             SERIAL PRIMARY KEY,
+      name           TEXT          NOT NULL,
+      category       TEXT          NOT NULL,
+      price          NUMERIC(10,2) NOT NULL,
+      original_price NUMERIC(10,2),
+      rating         NUMERIC(3,1)  NOT NULL DEFAULT 0,
+      reviews        INTEGER       NOT NULL DEFAULT 0,
+      badge          TEXT,
+      stock          INTEGER       NOT NULL DEFAULT 0,
+      description    TEXT          NOT NULL DEFAULT '',
+      details        TEXT          NOT NULL DEFAULT '[]',
+      images         TEXT          NOT NULL DEFAULT '[]',
+      featured       BOOLEAN       NOT NULL DEFAULT FALSE,
+      active         BOOLEAN       NOT NULL DEFAULT TRUE,
+      created_at     TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+      updated_at     TIMESTAMPTZ   NOT NULL DEFAULT NOW()
+    );
+  `);
+
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS users (
       id         SERIAL PRIMARY KEY,
       name       TEXT        NOT NULL,

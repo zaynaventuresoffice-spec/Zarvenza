@@ -1,5 +1,5 @@
-// const BASE = 'http://localhost:4000/api';
-const BASE = 'https://zarvenza.onrender.com/api';
+const BASE = 'http://localhost:4000/api';
+// const BASE = 'https://zarvenza.onrender.com/api';
 
 function getToken() {
   return localStorage.getItem('zarvenza_token');
@@ -38,6 +38,23 @@ export const api = {
   getOrder:    (id)  => request(`/orders/${id}`),
   trackOrder:  (num) => request(`/orders/track/${num}`),
   cancelOrder: (id)  => request(`/orders/${id}/cancel`, { method: 'PUT' }),
+
+  // ── Products ──────────────────────────────────────────────────
+  getProducts:    (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/products${qs ? '?' + qs : ''}`);
+  },
+  getCategories:  ()     => request('/products/categories'),
+  getProduct:     (id)   => request(`/products/${id}`),
+
+  // ── Admin: Products ───────────────────────────────────────────
+  adminGetAllProducts: ()       => request('/products/admin/all'),
+  adminCreateProduct:  (body)   => request('/products',     { method: 'POST',   body: JSON.stringify(body) }),
+  adminUpdateProduct:  (id, body) => request(`/products/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+  adminDeleteProduct:  (id)     => request(`/products/${id}`, { method: 'DELETE' }),
+
+  // ── Admin: Orders ─────────────────────────────────────────────
+  adminGetOrders: () => request('/orders/admin/all'),
 
   // ── Cart ──────────────────────────────────────────────────────
   getCart:   ()      => request('/cart'),

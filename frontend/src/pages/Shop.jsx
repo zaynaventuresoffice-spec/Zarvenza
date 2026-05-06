@@ -1,20 +1,20 @@
 import { useState } from 'react';
 import { SlidersHorizontal, ChevronDown } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
-import { products, categories } from '../data/products';
+import { useProducts } from '../context/ProductsContext';
 import './Shop.css';
 
 export default function Shop() {
+  const { products, categories, loading, error } = useProducts();
   const [activeCategory, setActiveCategory] = useState('All');
   const [sortBy, setSortBy] = useState('featured');
-  const [filterOpen, setFilterOpen] = useState(false);
 
   const filtered = products
     .filter(p => activeCategory === 'All' || p.category === activeCategory)
     .sort((a, b) => {
-      if (sortBy === 'price-asc') return a.price - b.price;
+      if (sortBy === 'price-asc')  return a.price - b.price;
       if (sortBy === 'price-desc') return b.price - a.price;
-      if (sortBy === 'rating') return b.rating - a.rating;
+      if (sortBy === 'rating')     return b.rating - a.rating;
       return 0;
     });
 
@@ -64,14 +64,18 @@ export default function Shop() {
           </div>
         </div>
 
-        {/* Grid */}
-        <div className="shop__grid">
-          {filtered.map(p => <ProductCard key={p.id} product={p} />)}
-        </div>
-
-        {filtered.length === 0 && (
-          <div className="shop__empty">
-            <p>No products found in this category.</p>
+        {loading && (
+          <div className="shop__empty"><div className="auth-spinner" /></div>
+        )}
+        {error && (
+          <div className="shop__empty"><p style={{ color: '#c0392b' }}>{error}</p></div>
+        )}
+        {!loading && !error && (
+          <div className="shop__grid">
+            {filtered.map(p => <ProductCard key={p.id} product={p} />)}
+            {filtered.length === 0 && (
+              <div className="shop__empty"><p>No products found in this category.</p></div>
+            )}
           </div>
         )}
       </div>

@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { CartProvider } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
 import { WishlistProvider } from './context/WishlistContext';
+import { ProductsProvider } from './context/ProductsContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -18,6 +19,7 @@ import Payment from './pages/Payment';
 import Auth from './pages/Auth';
 import Orders from './pages/Orders';
 import OrderDetail from './pages/OrderDetail';
+import AdminPortal from './pages/AdminPortal';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -28,6 +30,7 @@ function ScrollToTop() {
 export default function App() {
   return (
     <AuthProvider>
+      <ProductsProvider>
       <CartProvider>
         <WishlistProvider>
         <BrowserRouter>
@@ -55,11 +58,17 @@ export default function App() {
             <Route path="/orders/:id" element={
               <ProtectedRoute><OrderDetail /></ProtectedRoute>
             } />
+
+            {/* Admin */}
+            <Route path="/admin" element={
+              <ProtectedRoute adminOnly><AdminPortal /></ProtectedRoute>
+            } />
           </Routes>
           <Footer />
         </BrowserRouter>
         </WishlistProvider>
       </CartProvider>
+      </ProductsProvider>
     </AuthProvider>
   );
 }

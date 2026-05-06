@@ -1,12 +1,14 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, Sparkles, Leaf, Award } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
-import { products } from '../data/products';
+import { useProducts } from '../context/ProductsContext';
 import './Home.css';
 
-const featured = products.filter(p => p.featured);
+
 
 export default function Home() {
+  const { products } = useProducts();
+  const featured = products.filter(p => p.featured);
   return (
     <main className="home page-enter">
       {/* Hero */}
@@ -35,10 +37,10 @@ export default function Home() {
         </div>
       </section>
 
-     {/* Pillars */}
+      {/* Pillars */}
       <section className="pillars">
         <div className="container pillars__inner">
-        {[
+          {[
         { 
           icon: <Leaf size={22} />, 
           title: "Premium Fabrics", 
@@ -54,15 +56,15 @@ export default function Home() {
           title: "Quality Assured", 
           desc: "Every piece is thoroughly inspected to deliver superior craftsmanship and long-lasting quality." 
         },
-        ].map((p, i) => (
-        <div className="pillar" key={i}>
-          <div className="pillar__icon">{p.icon}</div>
-            <h3 className="pillar__title">{p.title}</h3>
-            <p className="pillar__desc">{p.desc}</p>
+          ].map((p, i) => (
+            <div className="pillar" key={i}>
+              <div className="pillar__icon">{p.icon}</div>
+              <h3 className="pillar__title">{p.title}</h3>
+              <p className="pillar__desc">{p.desc}</p>
+            </div>
+          ))}
         </div>
-      ))}
-    </div>
-  </section>
+      </section>
 
       {/* Featured Products */}
       <section className="section container">
