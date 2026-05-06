@@ -1,5 +1,5 @@
-const BASE = 'http://localhost:4000/api';
-// const BASE = 'https://zarvenza.onrender.com/api';
+// const BASE = 'http://localhost:4000/api';
+const BASE = 'https://zarvenza.onrender.com/api';
 
 function getToken() {
   return localStorage.getItem('zarvenza_token');
