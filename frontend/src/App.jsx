@@ -20,6 +20,7 @@ import Auth from './pages/Auth';
 import Orders from './pages/Orders';
 import OrderDetail from './pages/OrderDetail';
 import AdminPortal from './pages/AdminPortal';
+import TrackOrders from './pages/TrackOrder';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -62,6 +63,9 @@ export default function App() {
             {/* Admin */}
             <Route path="/admin" element={
               <ProtectedRoute adminOnly><AdminPortal /></ProtectedRoute>
+            } />
+            <Route path="/track-orders" element={
+              <ProtectedRoute adminOnly><TrackOrders /></ProtectedRoute>
             } />
           </Routes>
           <Footer />

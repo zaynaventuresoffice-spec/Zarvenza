@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { db } from '../db.js';
-import { requireAuth } from '../middleware/auth.js';
+import { requireAuth, requireAdmin } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -19,6 +19,72 @@ const STATUS_MESSAGES = {
   delivered:        'Your order has been delivered. We hope you love your Zarvenza experience!',
   cancelled:        'Your order has been cancelled. Any payment will be refunded within 5–7 business days.',
 };
+
+// ── GET /api/orders/admin/all  (admin) ──────────────────────────
+router.get('/admin/all', requireAdmin, async (req, res) => {
+  try {
+    const { rows } = await db.query(
+      `SELECT o.*,
+         u.name  AS customer_name,
+         u.email AS customer_email,
+         (SELECT COUNT(*) FROM order_items WHERE order_id = o.id)::int AS item_count
+       FROM orders o
+       JOIN users u ON u.id = o.user_id
+       ORDER BY o.created_at DESC`
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error('[Orders] admin list error:', err.message);
+    res.status(500).json({ error: 'Could not fetch orders' });
+  }
+});
+
+// ── PUT /api/orders/:id/status  (admin) ──────────────────────────
+router.put('/:id/status', requireAdmin, async (req, res) => {
+  const { status, message } = req.body;
+  const validStatuses = ['pending','confirmed','processing','shipped','delivered','cancelled'];
+  if (!validStatuses.includes(status))
+    return res.status(400).json({ error: 'Invalid status' });
+
+  try {
+    const { rows } = await db.query(
+      `SELECT * FROM orders WHERE id = $1`, [req.params.id]
+    );
+    if (!rows.length) return res.status(404).json({ error: 'Order not found' });
+
+    await db.query(
+      `UPDATE orders SET status = $1, updated_at = NOW() WHERE id = $2`,
+      [status, req.params.id]
+    );
+    await db.query(
+      `INSERT INTO order_tracking (order_id, status, message) VALUES ($1, $2, $3)`,
+      [req.params.id, status, message || STATUS_MESSAGES[status] || `Status updated to ${status}`]
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('[Orders] status update error:', err.message);
+    res.status(500).json({ error: 'Could not update status' });
+  }
+});
+
+// ── GET /api/orders/admin/:id  (admin — full order detail) ───────
+router.get('/admin/:id', requireAdmin, async (req, res) => {
+  try {
+    const { rows: orderRows } = await db.query(
+      `SELECT o.*, u.name AS customer_name, u.email AS customer_email
+       FROM orders o JOIN users u ON u.id = o.user_id
+       WHERE o.id = $1`, [req.params.id]
+    );
+    if (!orderRows.length) return res.status(404).json({ error: 'Order not found' });
+    const order = orderRows[0];
+    const { rows: items }    = await db.query('SELECT * FROM order_items    WHERE order_id = $1', [order.id]);
+    const { rows: tracking } = await db.query('SELECT * FROM order_tracking WHERE order_id = $1 ORDER BY created_at ASC', [order.id]);
+    res.json({ ...order, items, tracking });
+  } catch (err) {
+    res.status(500).json({ error: 'Could not fetch order' });
+  }
+});
 
 // ── GET /api/orders ──────────────────────────────────────────────
 router.get('/', requireAuth, async (req, res) => {

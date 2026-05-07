@@ -54,7 +54,9 @@ export const api = {
   adminDeleteProduct:  (id)     => request(`/products/${id}`, { method: 'DELETE' }),
 
   // ── Admin: Orders ─────────────────────────────────────────────
-  adminGetOrders: () => request('/orders/admin/all'),
+  adminGetOrders:      ()              => request('/orders/admin/all'),
+  adminGetOrder:       (id)            => request(`/orders/admin/${id}`),
+  adminUpdateStatus:   (id, body)      => request(`/orders/${id}/status`, { method: 'PUT', body: JSON.stringify(body) }),
 
   // ── Cart ──────────────────────────────────────────────────────
   getCart:   ()      => request('/cart'),
