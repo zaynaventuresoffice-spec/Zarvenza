@@ -13,8 +13,8 @@ const policies = [
         body: 'All orders are processed within 1–2 business days. Orders placed on weekends or public holidays will be processed the following business day. During high-demand periods, processing may take up to 3 business days.',
       },
       {
-        heading: 'Domestic Shipping (United States)',
-        body: 'Standard Shipping (5–7 business days): $9.95 or FREE on orders over $150. Express Shipping (2–3 business days): $19.95. Overnight Shipping (next business day): $34.95. All orders include a tracking number sent via email upon dispatch.',
+        heading: 'Domestic Shipping (India)',
+        body: 'Standard Shipping (5–7 business days): ₹40 or FREE on orders over ₹150. Express Shipping (2–3 business days): ₹75. Overnight Shipping (next business day): ₹135. All orders include a tracking number sent via email upon dispatch.',
       },
       {
         heading: 'International Shipping',
