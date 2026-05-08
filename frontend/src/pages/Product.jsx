@@ -141,7 +141,7 @@ export default function Product() {
 
             <div className="product__trust">
               {[
-                { icon: <Truck size={16} />, text: "Free shipping over $150" },
+                { icon: <Truck size={16} />, text: "Free shipping over ₹150" },
                 { icon: <RefreshCw size={16} />, text: "30-day returns" },
                 { icon: <Shield size={16} />, text: "Authentic & certified" },
               ].map((t, i) => (
